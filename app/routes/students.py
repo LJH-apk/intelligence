@@ -9,7 +9,7 @@
 '''
 from datetime import datetime
 
-from flask import Blueprint, render_template, request, redirect, url_for, flash
+from flask import Blueprint, render_template, request, redirect, url_for, flash, jsonify
 
 from app import db
 from app.models import Student
@@ -31,6 +31,37 @@ def create():
 
         flash("学生创建成功","success")
         return "创建成功"
+
+@bp.route('/delete/<int:id>')
+def delete_student(id):
+    student = Student.query.get_or_404(id)
+    db.session.delete(student)
+    db.session.commit()
+    flash('删除学生成功','success')
+    return jsonify({
+            "code": 200,
+            "status": "success",
+            "message":{
+                "name":student.name,
+                "info":"ok"
+            }
+        })
+
+@bp.route('/edit/<int:id>')
+def edit_student(id):
+    student = Student.query.get_or_404(id)
+    student.name = request.form['name']
+    student.age = request.form['age']
+    db.session.commit()
+    return jsonify({
+        "code": 200,
+        "status": "success",
+        "message":{
+            "name":student.name,
+            "info":"updated"
+        }
+    })
+
 
 @bp.route('/init')
 def init():
