@@ -33,3 +33,27 @@ def register():
                 "info":"ok"
             }
         })
+
+@bp.route('/update/<string:user_name&string:password>', methods=['POST'])
+def update(user_name):
+    if request.method == 'POST':
+        user = User.query.filter_by(user_name=user_name).first()
+        if user is None:
+            return jsonify({
+                "code": 404,
+                "status": "error",
+                "message": {
+                    "info": "用户不存在",
+                    "user_name": user_name
+                }
+            })
+        user.password = request.form['password']
+        db.session.commit()
+        return jsonify({
+            "code": 200,
+            "status": "success",
+            "message":{
+                'info':'password is updated'
+            }
+        })
+
