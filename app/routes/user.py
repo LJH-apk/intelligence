@@ -70,26 +70,70 @@ def create_user():
             'message': str(e)
         })
 
+@bp.route('/users/<int:user_id>', methods=['PUT'])
+def update_user(user_id):
+    """更新用户信息"""
+    try:
+        data = request.get_json()
 
-@bp.route('/register', methods=['POST'])
-def register():
-    if request.method == 'POST':
-        user_name = request.form.get('user_name')
-        password = request.form.get('password')
+        # 过滤不允许更新字段
+        allowed_fields = ['user_name', 'password']
+        update_data = {k: v for k, v in data.item() if k in allowed_fields}
 
-        new_user = User(user_name=user_name, password=password)
-        db.session.add(new_user)
-        db.session.commit()
+        user = UserService.update_user(user_id, **update_data)
 
-        flash("新建用户成功", "success")
+        if user:
+            return jsonify({
+                'code': 200,
+                'status': 'success',
+                "message":'用户更新成功',
+                'user': user.to_dict()
+            })
+        else:
+            return jsonify({
+                'code': 404,
+                'status': 'error',
+                'message': '用户不存在'
+            })
+
+    except ValueError as e:
         return jsonify({
-            "code": 200,
-            "status": "success",
-            "message":{
-                "name":user_name,
-                "info":"ok"
-            }
+            'code': 400,
+            'status': 'error',
+            'message': str(e)
         })
+    except Exception as e:
+        print(e)
+        return jsonify({
+            'code': 500,
+            'status': 'error',
+            'message': str(e)
+        })
+@bp.route('/users/<int:user_id>', methods=['DELETE'])
+def delete_user(user_id):
+    """删除用户"""
+    try:
+        user = UserService.delete_user(user_id)
+
+        if user:
+            return jsonify({
+                'code': 200,
+                'status': 'success',
+                'message': '用户删除成功'
+            })
+        else:
+            return jsonify({
+                'code': 404,
+                'status': 'error',
+                'message': '用户不存在'
+            })
+    except Exception as e:
+        return jsonify({
+            'code': 500,
+            'status': 'error',
+            'message': str(e)
+        })
+
 
 '''
 @bp.route('/update/<string:user_name&string:password>', methods=['POST'])
