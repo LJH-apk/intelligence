@@ -12,8 +12,65 @@ from flask import Blueprint, request, jsonify, flash
 
 from app import db
 from app.models import User
+from app.service.user_service import UserService
 
 bp = Blueprint('user', __name__)
+
+@bp.route('/users',methods=['GET'])
+def get_users():
+    """获取所有用户"""
+    try:
+        users = UserService.get_all_users()
+        return jsonify({
+            'code': 200,
+            'status': 'success',
+            'users': [user.to_dict() for user in users]
+        })
+    except Exception as e:
+        return jsonify({
+            'code': 500,
+            'status': 'error',
+            'message': str(e)
+        })
+
+@bp.route('/creat',methods=['POST'])
+def create_user():
+    """创建用户"""
+    try:
+        data = request.get_json()
+
+        required_fields = ['user_name', 'password']
+        for field in required_fields:
+            if field not in data or not data[field]:
+                return jsonify({
+                    'code': 400,
+                    'status': 'error',
+                    'message':f'字段{field}是必须的'
+                })
+
+            user = UserService.create_user(
+                user_name=data['user_name'],
+                password=data['password']
+            )
+            return jsonify({
+                'code': 201,
+                'status': 'success',
+                'user': user.to_dict()
+            })
+    except ValueError as e:
+        return jsonify({
+            'code': 400,
+            'status': 'error',
+            'message': str(e)
+        })
+    except Exception as e:
+        return jsonify({
+            'code': 500,
+            'status': 'error',
+            'message': str(e)
+        })
+
+
 @bp.route('/register', methods=['POST'])
 def register():
     if request.method == 'POST':
@@ -34,6 +91,7 @@ def register():
             }
         })
 
+'''
 @bp.route('/update/<string:user_name&string:password>', methods=['POST'])
 def update(user_name):
     if request.method == 'POST':
@@ -56,4 +114,5 @@ def update(user_name):
                 'info':'password is updated'
             }
         })
+'''
 
