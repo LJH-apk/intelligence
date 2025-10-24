@@ -78,7 +78,7 @@ def update_user(user_id):
 
         # 过滤不允许更新字段
         allowed_fields = ['user_name', 'password']
-        update_data = {k: v for k, v in data.item() if k in allowed_fields}
+        update_data = {k: v for k, v in data.items() if k in allowed_fields}
 
         user = UserService.update_user(user_id, **update_data)
 
@@ -133,30 +133,3 @@ def delete_user(user_id):
             'status': 'error',
             'message': str(e)
         })
-
-
-'''
-@bp.route('/update/<string:user_name&string:password>', methods=['POST'])
-def update(user_name):
-    if request.method == 'POST':
-        user = User.query.filter_by(user_name=user_name).first()
-        if user is None:
-            return jsonify({
-                "code": 404,
-                "status": "error",
-                "message": {
-                    "info": "用户不存在",
-                    "user_name": user_name
-                }
-            })
-        user.password = request.form['password']
-        db.session.commit()
-        return jsonify({
-            "code": 200,
-            "status": "success",
-            "message":{
-                'info':'password is updated'
-            }
-        })
-'''
-

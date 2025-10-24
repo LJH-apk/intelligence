@@ -44,3 +44,20 @@ class User(db.Model):
             'user_name': self.user_name,
             'password': self.password
         }
+
+class Information(db.Model):
+    id = db.Column(db.Integer, primary_key=True)
+    time = db.Column(db.DateTime, nullable=False, default=datetime.utcnow)
+    type = db.Column(db.String(50), nullable=False)
+    message = db.Column(db.String(500), nullable=False)
+
+    def __repr__(self):
+        return f'<Information {self.time}>'
+
+    def to_dict(self):
+        return {
+            'id': self.id,
+            'time': self.time.isoformat(),
+            'type': self.type,
+            'message': self.message
+        }
