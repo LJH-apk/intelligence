@@ -10,8 +10,6 @@
 
 from flask import Blueprint, request, jsonify, flash
 
-from app import db
-from app.models import User
 from app.service.user_service import UserService
 
 bp = Blueprint('user', __name__)
