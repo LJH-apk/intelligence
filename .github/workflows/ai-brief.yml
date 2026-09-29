@@ -19,7 +19,7 @@ jobs:
           python-version: "3.12"
 
       - name: Install dependency
-        run: pip install requests
+        run: pip install requests beautifulsoup4 python-dateutil
 
       - name: Build and send AI Brief
         env:
