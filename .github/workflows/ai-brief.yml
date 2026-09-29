@@ -1,0 +1,27 @@
+name: AI Brief Daily
+
+on:
+  schedule:
+    - cron: "0 23 * * *"   # 07:00 Asia/Shanghai
+  workflow_dispatch:
+
+jobs:
+  send:
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+
+      - name: Install dependency
+        run: pip install requests
+
+      - name: Build and send AI Brief
+        env:
+          RESEND_API_KEY: ${{ secrets.RESEND_API_KEY }}
+        run: python automation/ai_brief.py
