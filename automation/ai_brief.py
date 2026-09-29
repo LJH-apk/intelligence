@@ -53,6 +53,23 @@ def domain(url: str) -> str:
     except Exception:
         return ""
 
+def resolve_url(url: str) -> str:
+    """Resolve news-aggregator redirect URLs to the publisher when possible."""
+    try:
+        d = domain(url)
+        if d in ("bing.com", "www.bing.com", "news.google.com"):
+            r = requests.get(
+                url,
+                timeout=12,
+                allow_redirects=True,
+                headers={"User-Agent":"Mozilla/5.0 AI-Brief/1.0"},
+                stream=True,
+            )
+            return r.url or url
+    except Exception:
+        pass
+    return url
+
 def parse_date(s: str):
     if not s:
         return None
@@ -81,9 +98,11 @@ def fetch_rss(label: str, query: str):
         pub = parse_date(item.findtext("pubDate"))
         if not title or not link:
             continue
-        d = domain(link)
+        resolved = resolve_url(link)
+        d = domain(resolved)
         if not any(d == td or d.endswith("." + td) for td in TRUSTED_DOMAINS):
             continue
+        link = resolved
         if pub and pub < SINCE:
             continue
         text = f"{title} {desc}".lower()
@@ -212,13 +231,30 @@ def main():
         time.sleep(0.4)
 
     chosen = choose(items)
-    if not chosen:
-        raise RuntimeError("No sufficiently recent trusted AI news found; refusing to send stale filler.")
-
     date_str = datetime.now(TZ).strftime("%Y.%m.%d")
     subject = f"AI Brief · {date_str}"
-    text_body = build_text(chosen, date_str)
-    html_body = build_html(chosen, date_str)
+
+    if not chosen:
+        text_body = (
+            f"AI Brief · {date_str}\n\n"
+            "OpenAI / Anthropic / Google / Open Source\n\n"
+            "过去约 24 小时内，没有检索到足够可信且足够新的重大模型更新。"
+            "今天不为了凑数加入旧闻。\n\n"
+            "Sent from daily@liujiahang.icu"
+        )
+        html_body = f"""<!doctype html><html><body style="margin:0;background:#f6f7f9;padding:28px 12px;font-family:-apple-system,BlinkMacSystemFont,'Segoe UI','PingFang SC','Microsoft YaHei',Arial,sans-serif;color:#20242a">
+<div style="max-width:680px;margin:0 auto;background:#fff;border:1px solid #eceff3;border-radius:14px;padding:34px 32px">
+<div style="font-size:13px;color:#58606b;margin-bottom:20px">● AI Brief</div>
+<div style="font-size:32px;font-weight:700;margin-bottom:8px">AI Brief · {date_str}</div>
+<div style="font-size:14px;color:#8c929b;margin-bottom:24px">OpenAI / Anthropic / Google / Open Source</div>
+<div style="border-top:1px solid #eceff3;margin-bottom:24px"></div>
+<div style="font-size:15px;line-height:1.9;color:#606770">过去约 24 小时内，没有检索到足够可信且足够新的重大模型更新。今天不为了凑数加入旧闻。</div>
+<div style="margin-top:26px;font-size:12px;color:#979da6">Sent from daily@liujiahang.icu</div>
+</div></body></html>"""
+    else:
+        text_body = build_text(chosen, date_str)
+        html_body = build_html(chosen, date_str)
+
     send_email(subject, text_body, html_body)
 
 if __name__ == "__main__":
